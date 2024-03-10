@@ -328,7 +328,6 @@ class DataLoaderVal(Dataset):
 
         self.clean_filenames = [os.path.join(rgb_dir, gt_dir, x) for x in clean_files if is_png_file(x)]
         self.noisy_filenames = [os.path.join(rgb_dir, input_dir, x) for x in noisy_files if is_png_file(x)]
-
         if not self.opt.joint_learning_alpha or True:
             mask_files = sorted(os.listdir(os.path.join(rgb_dir, mask_dir)))
             self.mask_filenames = [os.path.join(rgb_dir, mask_dir, x) for x in mask_files if is_png_file(x)]

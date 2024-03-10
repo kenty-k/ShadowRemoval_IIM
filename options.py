@@ -24,7 +24,7 @@ class Options():
 
     def init(self, parser):        
         # global settings
-        parser.add_argument('--batch_size', type=int, default=6, help='batch size')
+        parser.add_argument('--batch_size', type=int, default=3, help='batch size')
         parser.add_argument('--nepoch', type=int, default=500, help='training epochs')
         parser.add_argument('--train_workers', type=int, default=16, help='train_dataloader workers')
         parser.add_argument('--eval_workers', type=int, default=8, help='eval_dataloader workers')
@@ -33,7 +33,7 @@ class Options():
         parser.add_argument('--optimizer', type=str, default ='adamw', help='optimizer for training')
         parser.add_argument('--lr_initial', type=float, default=0.0002, help='initial learning rate')
         parser.add_argument('--weight_decay', type=float, default=0.02, help='weight decay')
-        parser.add_argument('--gpu', type=str, default='2,3,0', help='GPUs')
+        parser.add_argument('--gpu', type=str, default='2,3', help='GPUs')
         parser.add_argument('--arch', type=str, default ='ShadowFormer',  help='archtechture')
         parser.add_argument('--mode', type=str, default ='shadow',  help='image restoration mode')
         parser.add_argument('--m_diff_alpha', type=float, default=0, help='diff image loss l1 weight')
@@ -49,7 +49,7 @@ class Options():
         parser.add_argument('--self_rep_lambda', type=float, default=0, help='weight of self-representation loss. When it is 0, this loss is not used.')
         parser.add_argument('--self_rep_once', action='store_true', default=False, help='backward default mse loss and self_rep loss same time')
         parser.add_argument('--self_feature_lambda', type=float, default=0, help='weight of feature loss')
-        parser.add_argument('--mask_dir',type=str, default='mask_v_mtmt', help='mask directory')
+        parser.add_argument('--mask_dir',type=str, default='mask', help='mask directory')
         parser.add_argument('--cut_shadow_ratio',  type=float, default=0.5, help='percentage of cut shadow applied')
         parser.add_argument('--cut_shadow_ns_s_ratio', type=float, default=0, help='影なしに影あり : 影ありに影なし = (1 - ns_s_ratio) : ns_s_ratio')
         parser.add_argument('--nomixup', action='store_true', default=False, help='if you dont need mixup')
@@ -65,7 +65,7 @@ class Options():
         parser.add_argument('--w_val', action='store_true', default=False, help='train with val dataset')
 
         # MTMT
-        parser.add_argument('--mtmt_pretrain_weights',type=str, default='./mtmt_model/weights/official_fine2.pth', help='path of mtmt pretrained_weights')
+        parser.add_argument('--mtmt_pretrain_weights',type=str, default='./mtmt_model/weights/iter_10000.pth', help='path of mtmt pretrained_weights')
         parser.add_argument('--mtmt_edge', type=float, default=10, help='edge learning weight')
         parser.add_argument('--mtmt_subitizing', type=float,  default=1, help='subitizing loss weight')
 
@@ -96,8 +96,8 @@ class Options():
         # args for training
         parser.add_argument('--train_ps', type=int, default=640, help='patch size of training sample')
         parser.add_argument('--resume', action='store_true', default=False)
-        parser.add_argument('--train_dir', type=str, default ='datasets/official_warped/train',  help='dir of train data')
-        parser.add_argument('--val_dir', type=str, default ='datasets/official_warped/val',  help='dir of train data')
+        parser.add_argument('--train_dir', type=str, default ='/home-local/kawai/NTIRE2023/shadow_removal/official/train',  help='dir of train data')
+        parser.add_argument('--val_dir', type=str, default ='/home-local/kawai/NTIRE2023/shadow_removal/official/val',  help='dir of train data')
         parser.add_argument('--warmup', action='store_true', default=True, help='warmup')
         parser.add_argument('--warmup_epochs', type=int, default=3, help='epochs for warmup')
 

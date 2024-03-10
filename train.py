@@ -11,7 +11,7 @@ import options
 ######### parser ###########
 opt = options.Options().init(argparse.ArgumentParser(description='image denoising')).parse_args()
 print(opt)
-
+# breakpoint()
 import utils
 ######### Set GPUs ###########
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -147,7 +147,7 @@ train_dataset = get_training_data(opt.train_dir, img_options_train, color_space=
 train_loader = DataLoader(dataset=train_dataset, batch_size=opt.batch_size, shuffle=True, 
         num_workers=opt.train_workers, pin_memory=True, drop_last=False)
 
-val_dataset = get_validation_data(opt.val_dir, color_space=opt.color_space, mask_dir=opt.mask_dir)
+val_dataset = get_validation_data(opt.val_dir, color_space=opt.color_space, mask_dir=opt.mask_dir, opt=opt)
 val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=False,
         num_workers=opt.eval_workers, pin_memory=False, drop_last=False)
 
