@@ -147,13 +147,13 @@ train_dataset = get_training_data(opt.train_dir, img_options_train, color_space=
 train_loader = DataLoader(dataset=train_dataset, batch_size=opt.batch_size, shuffle=True, 
         num_workers=opt.train_workers, pin_memory=True, drop_last=False)
 
-val_dataset = get_validation_data(opt.val_dir, color_space=opt.color_space, mask_dir=opt.mask_dir, opt=opt)
-val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=False,
-        num_workers=opt.eval_workers, pin_memory=False, drop_last=False)
+# val_dataset = get_validation_data(opt.val_dir, color_space=opt.color_space, mask_dir=opt.mask_dir, opt=opt)
+# val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=False,
+#         num_workers=opt.eval_workers, pin_memory=False, drop_last=False)
 
-len_trainset = train_dataset.__len__()
-len_valset = val_dataset.__len__()
-print("Sizeof training set: ", len_trainset,", sizeof validation set: ", len_valset)
+# len_trainset = train_dataset.__len__()
+# len_valset = val_dataset.__len__()
+# print("Sizeof training set: ", len_trainset,", sizeof validation set: ", len_valset)
 
 ######### train ###########
 print('===> Start Epoch {} End Epoch {}'.format(start_epoch,opt.nepoch))
@@ -325,55 +325,55 @@ for epoch in range(start_epoch, opt.nepoch + 1):
                 psnr_val_rgb = []
                 result_dir = os.path.join(log_dir, 'results', str(epoch))
                 os.makedirs(result_dir, exist_ok=True)
-                for ii, data_val in enumerate((val_loader), 0):
-                    target = data_val[0].cuda()
-                    input_ = data_val[1].cuda()
-                    mask = data_val[2].cuda()
-                    if opt.w_hsv:
-                        hsv = rgb_to_hsv(input_)
-                        input_ = torch.cat((input_, hsv), dim=1)
-                    if opt.joint_learning_alpha:
-                        # mask_number_per = data[4].cuda()
-                        # canny = kornia.filters.Canny()
-                        # _, mask_edge = canny(mask)
-                        # mask_edge = mask_edge.cuda()
-                        mask_number_per = None
-                        mask_edge = None
-                    filenames = data_val[3]
-                    with torch.cuda.amp.autocast():
-                        if opt.joint_learning_alpha:
-                            restored, restored_mask, loss_shadow, feature_input = model_restoration(input_, mask, mask_edge, mask_number_per)
-                        else:
-                            restored, feature_input = model_restoration(input_, mask)
-                    if opt.color_space == 'hsv':
-                        restored[:, 0] = input_[:, 0]
-                        restored[:, 1] = input_[:, 1]
-                        restored[:, 2] = torch.clamp(restored[:, 2],0,1)
-                    else:
-                        restored = torch.clamp(restored,0,1)
-                    psnr_val_rgb.append(utils.batch_PSNR(restored, target, False, color_space=opt.color_space).item())
-                    if filenames[0] in ['0902.png', '0908.png', '0960.png', '0989.png']:
-                        restored = restored.cpu().numpy().squeeze().transpose((1, 2, 0))
-                        rgb_restored = convert_color_space(restored, opt.color_space, 'rgb')
-                        utils.save_img(rgb_restored*255.0, os.path.join(result_dir, filenames[0]))
-                        if opt.joint_learning_alpha:
-                            mask_pred_save = (restored_mask[0] * 255).detach().cpu().numpy().transpose((1, 2, 0)).astype(np.uint8)
-                            utils.save_img(mask_pred_save, os.path.join(result_dir, filenames[0]+"-mask_pred.png"))
+                # for ii, data_val in enumerate((val_loader), 0):
+                #     target = data_val[0].cuda()
+                #     input_ = data_val[1].cuda()
+                #     mask = data_val[2].cuda()
+                #     if opt.w_hsv:
+                #         hsv = rgb_to_hsv(input_)
+                #         input_ = torch.cat((input_, hsv), dim=1)
+                #     if opt.joint_learning_alpha:
+                #         # mask_number_per = data[4].cuda()
+                #         # canny = kornia.filters.Canny()
+                #         # _, mask_edge = canny(mask)
+                #         # mask_edge = mask_edge.cuda()
+                #         mask_number_per = None
+                #         mask_edge = None
+                #     filenames = data_val[3]
+                #     with torch.cuda.amp.autocast():
+                #         if opt.joint_learning_alpha:
+                #             restored, restored_mask, loss_shadow, feature_input = model_restoration(input_, mask, mask_edge, mask_number_per)
+                #         else:
+                #             restored, feature_input = model_restoration(input_, mask)
+                #     if opt.color_space == 'hsv':
+                #         restored[:, 0] = input_[:, 0]
+                #         restored[:, 1] = input_[:, 1]
+                #         restored[:, 2] = torch.clamp(restored[:, 2],0,1)
+                #     else:
+                #         restored = torch.clamp(restored,0,1)
+                #     psnr_val_rgb.append(utils.batch_PSNR(restored, target, False, color_space=opt.color_space).item())
+                #     if filenames[0] in ['0902.png', '0908.png', '0960.png', '0989.png']:
+                #         restored = restored.cpu().numpy().squeeze().transpose((1, 2, 0))
+                #         rgb_restored = convert_color_space(restored, opt.color_space, 'rgb')
+                #         utils.save_img(rgb_restored*255.0, os.path.join(result_dir, filenames[0]))
+                #         if opt.joint_learning_alpha:
+                #             mask_pred_save = (restored_mask[0] * 255).detach().cpu().numpy().transpose((1, 2, 0)).astype(np.uint8)
+                #             utils.save_img(mask_pred_save, os.path.join(result_dir, filenames[0]+"-mask_pred.png"))
     
-                psnr_val_rgb = sum(psnr_val_rgb)/len(val_dataset)
-                wandb.log({"val_psnr":psnr_val_rgb, 'epoch': epoch})
-                if psnr_val_rgb > best_psnr:
-                    best_psnr = psnr_val_rgb
-                    best_epoch = epoch
-                    best_iter = i
-                    torch.save({'epoch': epoch,
-                                'state_dict': model_restoration.state_dict(),
-                                'optimizer' : optimizer.state_dict()
-                                }, os.path.join(model_dir,"model_best.pth"))
-                print("\n[Ep %d it %d\t PSNR : %.4f] " % (epoch, i, psnr_val_rgb))
-                with open(logname,'a') as f:
-                    f.write("[Ep %d it %d\t PSNR SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_PSNR_SIDD %.4f] " \
-                        % (epoch, i, psnr_val_rgb,best_epoch,best_iter,best_psnr)+'\n')
+                # psnr_val_rgb = sum(psnr_val_rgb)/len(val_dataset)
+                # wandb.log({"val_psnr":psnr_val_rgb, 'epoch': epoch})
+                # if psnr_val_rgb > best_psnr:
+                #     best_psnr = psnr_val_rgb
+                #     best_epoch = epoch
+                #     best_iter = i
+                #     torch.save({'epoch': epoch,
+                #                 'state_dict': model_restoration.state_dict(),
+                #                 'optimizer' : optimizer.state_dict()
+                #                 }, os.path.join(model_dir,"model_best.pth"))
+                # print("\n[Ep %d it %d\t PSNR : %.4f] " % (epoch, i, psnr_val_rgb))
+                # with open(logname,'a') as f:
+                #     f.write("[Ep %d it %d\t PSNR SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_PSNR_SIDD %.4f] " \
+                #         % (epoch, i, psnr_val_rgb,best_epoch,best_iter,best_psnr)+'\n')
                 model_restoration.train()
                 torch.cuda.empty_cache()
     scheduler.step()

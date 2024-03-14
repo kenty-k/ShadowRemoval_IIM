@@ -45,7 +45,7 @@ class MixUp_AUG:
         rgb_gt2 = rgb_gt[indices]
         rgb_noisy2 = rgb_noisy[indices]
         gray_mask2 = gray_mask[indices]
-        if gray_mask_edge:
+        if gray_mask_edge.any():
             gray_mask_edge2 = gray_mask_edge[indices]
         # gray_contour2 = gray_mask[indices]
         lam = self.dist.rsample((bs,1)).view(-1,1,1,1).cuda()
@@ -53,7 +53,7 @@ class MixUp_AUG:
         rgb_gt    = lam * rgb_gt + (1-lam) * rgb_gt2
         rgb_noisy = lam * rgb_noisy + (1-lam) * rgb_noisy2
         gray_mask = lam * gray_mask + (1-lam) * gray_mask2
-        if gray_mask_edge:
+        if gray_mask_edge.any():
             gray_mask_edge = lam * gray_mask_edge + (1-lam) * gray_mask_edge2
         # gray_mask = torch.where(gray_mask>0.01, torch.ones_like(gray_mask), torch.zeros_like(gray_mask))
         # gray_contour = lam * gray_contour + (1-lam) * gray_contour2

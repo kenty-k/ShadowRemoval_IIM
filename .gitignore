@@ -21,7 +21,8 @@ gen_diff.py
 viz_dataloader.py
 train_sweep.py
 requirements_.txt
-
+*.png
+*.pth
 
 ################################################################
 # https://github.com/github/gitignore/blob/main/Python.gitignore

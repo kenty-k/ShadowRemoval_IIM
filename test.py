@@ -12,7 +12,7 @@ import torch.nn.functional as F
 # from ptflops import get_model_complexity_info
 
 import scipy.io as sio
-from utils.loader import get_validation_data
+from utils.loader import get_validation_data, get_test_data
 from utils.image_utils import convert_color_space, rgb_to_hsv
 import utils
 import cv2
@@ -24,13 +24,13 @@ from skimage.metrics import structural_similarity as ssim_loss
 from sklearn.metrics import mean_squared_error as mse_loss
 
 parser = argparse.ArgumentParser(description='RGB denoising evaluation on the validation set of SIDD')
-parser.add_argument('--input_dir', default='/home-local/kawai/NTIRE2024/shadow_removal/official_warped/val/',
+parser.add_argument('--input_dir', default='/home-local/kawai/NTIRE2024/shadow_removal/official/val',
     type=str, help='Directory of validation images')
 parser.add_argument('--result_dir', default='./results/val',
     type=str, help='Directory for results')
-parser.add_argument('--weights', default='./log/ShadowFormer_istd/models/model_best.pth',
+parser.add_argument('--weights', default='./log/ShadowFormer_/models/model_best.pth',
     type=str, help='Path to weights')
-parser.add_argument('--gpus', default='2', type=str, help='CUDA_VISIBLE_DEVICES')
+parser.add_argument('--gpus', default='5', type=str, help='CUDA_VISIBLE_DEVICES')
 parser.add_argument('--arch', default='ShadowFormer', type=str, help='arch')
 parser.add_argument('--batch_size', default=1, type=int, help='Batch size for dataloader')
 parser.add_argument('--save_images', action='store_true', help='Save denoised images in result directory')
@@ -42,7 +42,7 @@ parser.add_argument('--token_mlp', type=str,default='leff', help='ffn/leff token
 parser.add_argument('--color_space', type=str, default ='rgb',  
                     choices=['rgb', 'bray', 'hsv', 'lab', 'luv', 'hls', 'yuv', 'xyz', 'ycrcb'], help='color space')
 parser.add_argument('--self_feature_lambda', type=float, default=0, help='weight of feature loss')
-parser.add_argument('--mask_dir',type=str, default='mask_v_mtmt', help='mask directory')
+parser.add_argument('--mask_dir',type=str, default='mask', help='mask directory')
 parser.add_argument('--w_hsv', action='store_true', default=False, help='Add hsv to the input channel rgb')
 parser.add_argument('--joint_learning_alpha', type=float, default=0, help='joint learning ratio. loss = loss_shadow * joint_learning_alpha + loss_other * (1 - joint_learning_alpha')
 parser.add_argument('--mtmt_pretrain_weights',type=str, default='', help='path of mtmt pretrained_weights')
@@ -70,8 +70,9 @@ if args.joint_learning_alpha:
     os.makedirs(f"{args.result_dir}/pred", exist_ok=True)
     os.makedirs(f"{args.result_dir}/pred-mask", exist_ok=True)
 
-test_dataset = get_validation_data(args.input_dir, color_space=args.color_space, mask_dir=args.mask_dir, opt=args)
-test_loader = DataLoader(dataset=test_dataset, batch_size=1, shuffle=False, num_workers=8, drop_last=False)
+# test_dataset = get_validation_data(args.input_dir, color_space=args.color_space, mask_dir=args.mask_dir, opt=args)
+test_dataset = get_test_data(args.input_dir, color_space=args.color_space, mask_dir=args.mask_dir, opt=args)
+test_loader = DataLoader(dataset=test_dataset, batch_size=1, shuffle=False, num_workers=1, drop_last=False)
 
 model_restoration = utils.get_arch(args)
 model_restoration = torch.nn.DataParallel(model_restoration)
@@ -95,7 +96,7 @@ with torch.no_grad():
     rmse_val_s = []
     rmse_val_ns = []
     for ii, data_test in enumerate(tqdm(test_loader), 0):
-        rgb_gt = data_test[0].numpy().squeeze().transpose((1, 2, 0))
+        # rgb_gt = data_test[0].numpy().squeeze().transpose((1, 2, 0))
         rgb_noisy = data_test[1].cuda()
         mask = data_test[2].cuda()
         filenames = data_test[3]
@@ -150,12 +151,12 @@ with torch.no_grad():
         if args.color_space == 'hsv':
             rgb_restored[:, :, 0] = rgb_noisy[:, :, 0]
             rgb_restored[:, :, 1] = rgb_noisy[:, :, 1]
-            rgb_noisy[:, :, 2] = rgb_gt[:, :, 2]
+            # rgb_noisy[:, :, 2] = rgb_gt[:, :, 2]
             rgb_restored[:, :, 2] = np.clip(rgb_restored[:, :, 2], 0, 1)
         else:
             rgb_restored = np.clip(rgb_restored, 0, 1)
         rgb_restored = convert_color_space(rgb_restored, args.color_space, 'rgb')
-        rgb_gt = convert_color_space(rgb_gt, args.color_space, 'rgb')
+        # rgb_gt = convert_color_space(rgb_gt, args.color_space, 'rgb')
         rgb_noisy = convert_color_space(rgb_noisy, args.color_space, 'rgb')
 
         # Unpad the output
@@ -168,26 +169,26 @@ with torch.no_grad():
 
             # calculate SSIM in gray space
             gray_restored = cv2.cvtColor(rgb_restored, cv2.COLOR_RGB2GRAY)
-            gray_gt = cv2.cvtColor(rgb_gt, cv2.COLOR_RGB2GRAY)
-            ssim = ssim_loss(gray_restored, gray_gt, channel_axis=None)
-            ssim_val_rgb.append(ssim)
-            ssim_val_ns.append(ssim_loss(gray_restored * (1 - bm.squeeze()), gray_gt * (1 - bm.squeeze()), channel_axis=None))
-            ssim_val_s.append(ssim_loss(gray_restored * bm.squeeze(), gray_gt * bm.squeeze(), channel_axis=None))
+            # gray_gt = cv2.cvtColor(rgb_gt, cv2.COLOR_RGB2GRAY)
+            # ssim = ssim_loss(gray_restored, gray_gt, channel_axis=None)
+            # ssim_val_rgb.append(ssim)
+            # ssim_val_ns.append(ssim_loss(gray_restored * (1 - bm.squeeze()), gray_gt * (1 - bm.squeeze()), channel_axis=None))
+            # ssim_val_s.append(ssim_loss(gray_restored * bm.squeeze(), gray_gt * bm.squeeze(), channel_axis=None))
 
-            psnr = psnr_loss(rgb_restored, rgb_gt)
-            psnr_val_rgb.append(psnr)
-            psnr_val_ns.append(psnr_loss(rgb_restored * (1 - bm), rgb_gt * (1 - bm)))
-            psnr_val_s.append(psnr_loss(rgb_restored * bm, rgb_gt * bm))
+            # psnr = psnr_loss(rgb_restored, rgb_gt)
+            # psnr_val_rgb.append(psnr)
+            # psnr_val_ns.append(psnr_loss(rgb_restored * (1 - bm), rgb_gt * (1 - bm)))
+            # psnr_val_s.append(psnr_loss(rgb_restored * bm, rgb_gt * bm))
 
             # calculate the RMSE in LAB space
-            rmse_temp = np.abs(cv2.cvtColor(rgb_restored, cv2.COLOR_RGB2LAB) - cv2.cvtColor(rgb_gt, cv2.COLOR_RGB2LAB)).mean() * 3
-            rmse_val_rgb.append(rmse_temp)
-            rmse_temp_s = np.abs(cv2.cvtColor(rgb_restored * bm, cv2.COLOR_RGB2LAB) - cv2.cvtColor(rgb_gt * bm, cv2.COLOR_RGB2LAB)).sum() / bm.sum()
-            rmse_temp_ns = np.abs(cv2.cvtColor(rgb_restored * (1-bm), cv2.COLOR_RGB2LAB) - cv2.cvtColor(rgb_gt * (1-bm),
-                                                                                                   cv2.COLOR_RGB2LAB)).sum() / (1-bm).sum()
-            rmse_val_s.append(rmse_temp_s)
-            rmse_val_ns.append(rmse_temp_ns)
-            # print(filenames[0], psnr, ssim)
+            # rmse_temp = np.abs(cv2.cvtColor(rgb_restored, cv2.COLOR_RGB2LAB) - cv2.cvtColor(rgb_gt, cv2.COLOR_RGB2LAB)).mean() * 3
+            # rmse_val_rgb.append(rmse_temp)
+            # rmse_temp_s = np.abs(cv2.cvtColor(rgb_restored * bm, cv2.COLOR_RGB2LAB) - cv2.cvtColor(rgb_gt * bm, cv2.COLOR_RGB2LAB)).sum() / bm.sum()
+            # rmse_temp_ns = np.abs(cv2.cvtColor(rgb_restored * (1-bm), cv2.COLOR_RGB2LAB) - cv2.cvtColor(rgb_gt * (1-bm),
+            #                                                                                        cv2.COLOR_RGB2LAB)).sum() / (1-bm).sum()
+            # rmse_val_s.append(rmse_temp_s)
+            # rmse_val_ns.append(rmse_temp_ns)
+            # # print(filenames[0], psnr, ssim)
 
         if args.save_images:
             utils.save_img(rgb_restored*255.0, os.path.join(args.result_dir, filenames[0]), color_space='rgb') #, color_space=args.color_space)

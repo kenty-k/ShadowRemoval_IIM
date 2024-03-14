@@ -24,11 +24,11 @@ from skimage.metrics import structural_similarity as ssim_loss
 from sklearn.metrics import mean_squared_error as mse_loss
 
 parser = argparse.ArgumentParser(description='RGB denoising evaluation on the validation set of SIDD')
-parser.add_argument('--input_dir', default='/home-local/kawai/NTIRE2023/shadow_removal/official/test_final/',
+parser.add_argument('--input_dir', default='/home-local/kawai/NTIRE2024/shadow_removal/official/val',
     type=str, help='Directory of validation images')
 parser.add_argument('--result_dir', default='./results/test',
     type=str, help='Directory for results')
-parser.add_argument('--weights', default='./log/ShadowFormer_istd/models/model_best.pth',
+parser.add_argument('--weights', default='./log/ShadowFormer_/models/model_best.pth',
     type=str, help='Path to weights')
 parser.add_argument('--gpus', default='2', type=str, help='CUDA_VISIBLE_DEVICES')
 parser.add_argument('--arch', default='ShadowFormer', type=str, help='arch')
@@ -101,7 +101,7 @@ with torch.no_grad():
             mask = None
         else:
             mask = data_test[2].cuda()
-            mask = F.pad(mask, (0, padw, 0, padh), 'reflect')
+            # mask = F.pad(mask, (0, padw, 0, padh), 'reflect')??????
         filenames = data_test[4]
         if args.joint_learning_alpha:
             mask_number_per = None

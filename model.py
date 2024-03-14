@@ -1186,6 +1186,7 @@ class ShadowFormerJointMTMT(nn.Module):
 
         self.mtmt = create_mtmt_model()
         if opt.mtmt_pretrain_weights:
+            print("Loading pretrain weights for MTMT")
             self.mtmt.load_state_dict(torch.load(opt.mtmt_pretrain_weights))
 
         self.num_enc_layers = len(depths)//2

@@ -201,7 +201,7 @@ class DataLoaderTrainOfficialWarped(Dataset):
 
 ##################################################################################################
 class DataLoaderTrainOfficialWarpedJointLearning(Dataset):
-    def __init__(self, rgb_dir, img_options=None, target_transform=None, color_space='rgb', mask_dir='mask', opt=None):
+    def __init__(self, rgb_dir, img_options=None, target_transform=None, color_space='rgb', mask_dir='mask_SASMA', opt=None):
         super(DataLoaderTrainOfficialWarpedJointLearning, self).__init__()
 
         enable_list = ['rgb', 'bray', 'hsv', 'lab', 'luv', 'hls', 'yuv', 'xyz', 'ycrcb']
@@ -213,12 +213,14 @@ class DataLoaderTrainOfficialWarpedJointLearning(Dataset):
 
         self.target_transform = target_transform
         
-        assert 'official_warped' in rgb_dir
+        # assert 'official_warped' in rgb_dir
+        assert 'official' in rgb_dir
+
         gt_dir = 'gt'
         input_dir = 'input'
-        # mask_dir = 'mask'
+        mask_dir = 'mask_SASMA'
         mask_gt_dir = 'mask_v'
-        diff_dir = 'diff'
+        diff_dir = 'diff_v'
         
         self.clean_filenames = sorted(list(map(str, (Path(rgb_dir) / gt_dir).iterdir())))
         self.noisy_filenames = sorted(list(map(str, (Path(rgb_dir) / input_dir).iterdir())))
@@ -312,21 +314,21 @@ class DataLoaderVal(Dataset):
         self.target_transform = target_transform
         
         if 'ISTD' in rgb_dir:
-            gt_dir = 'train_C'
+            # gt_dir = 'train_C'
             input_dir = 'train_A'
-            mask_dir = 'train_B'
+            # mask_dir = 'train_B'
         elif 'official' in rgb_dir:
-            gt_dir = 'gt'
+            # gt_dir = 'gt'
             input_dir = 'input'
             # mask_dir = 'mask'
         else:
             assert False, rgb_dir
         
-        clean_files = sorted(os.listdir(os.path.join(rgb_dir, gt_dir)))
+        # clean_files = sorted(os.listdir(os.path.join(rgb_dir, gt_dir)))
         noisy_files = sorted(os.listdir(os.path.join(rgb_dir, input_dir)))
 
 
-        self.clean_filenames = [os.path.join(rgb_dir, gt_dir, x) for x in clean_files if is_png_file(x)]
+        # self.clean_filenames = [os.path.join(rgb_dir, gt_dir, x) for x in clean_files if is_png_file(x)]
         self.noisy_filenames = [os.path.join(rgb_dir, input_dir, x) for x in noisy_files if is_png_file(x)]
         if not self.opt.joint_learning_alpha or True:
             mask_files = sorted(os.listdir(os.path.join(rgb_dir, mask_dir)))
@@ -378,7 +380,7 @@ class DataLoaderTest(Dataset):
             # mask_dir = 'train_B'
         elif 'official' in rgb_dir:
             input_dir = 'input'
-            # mask_dir = 'mask'
+            mask_dir = 'mask'
         else:
             assert False, rgb_dir
         
