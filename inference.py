@@ -17,6 +17,7 @@ from utils.image_utils import convert_color_space, rgb_to_hsv
 import utils
 import cv2
 from model import UNet
+import time
 
 from skimage import img_as_float32, img_as_ubyte
 from skimage.metrics import peak_signal_noise_ratio as psnr_loss
@@ -24,13 +25,13 @@ from skimage.metrics import structural_similarity as ssim_loss
 from sklearn.metrics import mean_squared_error as mse_loss
 
 parser = argparse.ArgumentParser(description='RGB denoising evaluation on the validation set of SIDD')
-parser.add_argument('--input_dir', default='/home-local/kawai/NTIRE2024/shadow_removal/official/val',
+parser.add_argument('--input_dir', default='/home-local/kawai/NTIRE2024/shadow_removal/official/test',
     type=str, help='Directory of validation images')
-parser.add_argument('--result_dir', default='./results/test',
+parser.add_argument('--result_dir', default='./results/test_former+',
     type=str, help='Directory for results')
-parser.add_argument('--weights', default='./log/ShadowFormer_/models/model_best.pth',
+parser.add_argument('--weights', default='./log/ShadowFormer_/models/model_latest.pth',
     type=str, help='Path to weights')
-parser.add_argument('--gpus', default='2', type=str, help='CUDA_VISIBLE_DEVICES')
+parser.add_argument('--gpus', default='1', type=str, help='CUDA_VISIBLE_DEVICES')
 parser.add_argument('--arch', default='ShadowFormer', type=str, help='arch')
 parser.add_argument('--batch_size', default=1, type=int, help='Batch size for dataloader')
 parser.add_argument('--save_images', action='store_true', help='Save denoised images in result directory')
@@ -42,9 +43,9 @@ parser.add_argument('--token_mlp', type=str,default='leff', help='ffn/leff token
 parser.add_argument('--color_space', type=str, default ='rgb',  
                     choices=['rgb', 'bray', 'hsv', 'lab', 'luv', 'hls', 'yuv', 'xyz', 'ycrcb'], help='color space')
 parser.add_argument('--self_feature_lambda', type=float, default=0, help='weight of feature loss')
-parser.add_argument('--mask_dir',type=str, default='mask_v_mtmt', help='mask directory')
+parser.add_argument('--mask_dir',type=str, default='mask_mtmt_ft', help='mask directory')
 parser.add_argument('--w_hsv', action='store_true', default=False, help='Add hsv to the input channel rgb')
-parser.add_argument('--joint_learning_alpha', type=float, default=0, help='joint learning ratio. loss = loss_shadow * joint_learning_alpha + loss_other * (1 - joint_learning_alpha')
+parser.add_argument('--joint_learning_alpha', type=float, default=1, help='joint learning ratio. loss = loss_shadow * joint_learning_alpha + loss_other * (1 - joint_learning_alpha')
 parser.add_argument('--mtmt_pretrain_weights',type=str, default='', help='path of mtmt pretrained_weights')
 
 # args for vit
@@ -94,6 +95,7 @@ with torch.no_grad():
     ssim_val_ns = []
     rmse_val_s = []
     rmse_val_ns = []
+    start_time = time.time()
     for ii, data_test in enumerate(tqdm(test_loader), 0):
         # rgb_gt = data_test[0].numpy().squeeze().transpose((1, 2, 0))
         rgb_noisy = data_test[1].cuda()
@@ -151,9 +153,13 @@ with torch.no_grad():
 
         # Unpad the output
         rgb_restored = rgb_restored[:height, :width, :]
+
         if args.joint_learning_alpha:
             mask_pred_save = (restored_mask[0] * 255).detach().cpu().numpy().transpose((1, 2, 0)).astype(np.uint8)
             utils.save_img(mask_pred_save, os.path.join(args.result_dir, "pred-mask", filenames[0]))
             utils.save_img(rgb_restored*255.0, os.path.join(args.result_dir, "pred", filenames[0]), color_space=args.color_space)
         else:
             utils.save_img(rgb_restored*255.0, os.path.join(args.result_dir, filenames[0]), color_space=args.color_space)
+    end_time = time.time()  # 推論終了時刻を記録
+    inference_time = end_time - start_time  # 経過時間を計算
+    print(f"Inference Time: {inference_time:.2f} seconds") 

@@ -361,15 +361,15 @@ for epoch in range(start_epoch, opt.nepoch + 1):
                 #             utils.save_img(mask_pred_save, os.path.join(result_dir, filenames[0]+"-mask_pred.png"))
     
                 # psnr_val_rgb = sum(psnr_val_rgb)/len(val_dataset)
-                # wandb.log({"val_psnr":psnr_val_rgb, 'epoch': epoch})
-                # if psnr_val_rgb > best_psnr:
-                #     best_psnr = psnr_val_rgb
-                #     best_epoch = epoch
-                #     best_iter = i
-                #     torch.save({'epoch': epoch,
-                #                 'state_dict': model_restoration.state_dict(),
-                #                 'optimizer' : optimizer.state_dict()
-                #                 }, os.path.join(model_dir,"model_best.pth"))
+                wandb.log({"val_psnr":psnr_val_rgb, 'epoch': epoch})
+                if psnr_val_rgb > best_psnr:
+                    best_psnr = psnr_val_rgb
+                    best_epoch = epoch
+                    best_iter = i
+                    torch.save({'epoch': epoch,
+                                'state_dict': model_restoration.state_dict(),
+                                'optimizer' : optimizer.state_dict()
+                                }, os.path.join(model_dir,"model_best.pth"))
                 # print("\n[Ep %d it %d\t PSNR : %.4f] " % (epoch, i, psnr_val_rgb))
                 # with open(logname,'a') as f:
                 #     f.write("[Ep %d it %d\t PSNR SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_PSNR_SIDD %.4f] " \
