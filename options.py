@@ -29,7 +29,7 @@ class Options():
         parser.add_argument('--train_workers', type=int, default=16, help='train_dataloader workers')
         parser.add_argument('--eval_workers', type=int, default=8, help='eval_dataloader workers')
         parser.add_argument('--dataset', type=str, default ='ISTD')
-        parser.add_argument('--pretrain_weights',type=str, default='/home/kawai/project/NTIRE2024_ShadowRemoval_IIM/weights/shadow_former+.pth', help='path of pretrained_weights')
+        parser.add_argument('--pretrain_weights',type=str, default='./weights/shadow_former+.pth', help='path of pretrained_weights')
         parser.add_argument('--optimizer', type=str, default ='adamw', help='optimizer for training')
         parser.add_argument('--lr_initial', type=float, default=0.0002, help='initial learning rate')
         parser.add_argument('--weight_decay', type=float, default=0.02, help='weight decay')
@@ -96,8 +96,8 @@ class Options():
         # args for training
         parser.add_argument('--train_ps', type=int, default=640, help='patch size of training sample')
         parser.add_argument('--resume', action='store_true', default=False)
-        parser.add_argument('--train_dir', type=str, default ='/home-local/kawai/NTIRE2024/shadow_removal/official/train',  help='dir of train data')
-        parser.add_argument('--val_dir', type=str, default ='/home-local/kawai/NTIRE2024/shadow_removal/official/val',  help='dir of train data')
+        parser.add_argument('--train_dir', type=str, default ='path/train',  help='dir of train data')
+        parser.add_argument('--val_dir', type=str, default ='',  help='dir of train data')
         parser.add_argument('--warmup', action='store_true', default=True, help='warmup')
         parser.add_argument('--warmup_epochs', type=int, default=3, help='epochs for warmup')
 

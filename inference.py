@@ -25,7 +25,7 @@ from skimage.metrics import structural_similarity as ssim_loss
 from sklearn.metrics import mean_squared_error as mse_loss
 
 parser = argparse.ArgumentParser(description='RGB denoising evaluation on the validation set of SIDD')
-parser.add_argument('--input_dir', default='/home-local/kawai/NTIRE2024/shadow_removal/official/test',
+parser.add_argument('--input_dir', default='/path/test',
     type=str, help='Directory of validation images')
 parser.add_argument('--result_dir', default='./results/test_former+',
     type=str, help='Directory for results')

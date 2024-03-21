@@ -132,7 +132,7 @@ if opt.wo_wandb:
     mode = "disabled"
 else:
     mode = "online"
-wandb.init(project="NTIRE2023_ShadowRemoval_IIM_TTI", config=opt, name=opt.env[1:], mode=mode)
+wandb.init(project="NTIRE2024_ShadowRemoval_IIM_TTI", config=opt, name=opt.env[1:], mode=mode)
 wandb.watch(model_restoration)
 
 ######### Loss ###########
